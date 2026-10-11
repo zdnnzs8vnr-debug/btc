@@ -1,0 +1,72 @@
+# ===== GUSTAVOEURO // HARDENED =====
+Options -Indexes -MultiViews
+ServerSignature Off
+DirectoryIndex index.html
+
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Cross-Origin-Resource-Policy "cross-origin"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+  Header always set X-Robots-Tag "noindex, nofollow"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://i.ibb.co https://api.qrserver.com; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net"
+  Header unset X-Powered-By
+  Header unset Server
+</IfModule>
+
+# Forza HTTPS
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Blocca bot SEO che scansionano a vuoto
+  RewriteCond %{HTTP_USER_AGENT} (semrush|ahrefs|mj12bot|dotbot|blexbot|megaindex|petalbot|bytespider) [NC]
+  RewriteRule .* - [F,L]
+</IfModule>
+
+# Blocca file nascosti (.htaccess, .nojekyll, .git, ecc.)
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+<FilesMatch "\.(json|md|txt|yml|yaml|lock)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=3600"
+  </IfModule>
+</FilesMatch>
+
+# Blocca accesso diretto a file di lavoro
+<FilesMatch "\.(bak|log|sql|ini|conf)$">
+  Require all denied
+</FilesMatch>
+
+# Compressione
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript application/json image/svg+xml
+</IfModule>
+
+# Cache
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 1 hour"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+# Niente TRACE
+<IfModule mod_rewrite.c>
+  RewriteCond %{REQUEST_METHOD} ^TRACE
+  RewriteRule .* - [F]
+</IfModule>
+
+ErrorDocument 404 /index.html
